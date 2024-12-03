@@ -1,17 +1,24 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.9
+from flask import Flask, request, jsonify, render_template_string
+import json
 
-# Set the working directory
-WORKDIR /app
+app = Flask(__name__)
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# In-memory storage for users
+users = {}
 
-# Install Flask
-RUN pip install flask
+@app.route('/')
+def index():
+    return render_template_string(open('index.html').read())
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data['username']
+    password = data['password']
+    if username in users and users[username] == password:
+        return jsonify(message=f"Welcome, {username}!"), 200
+    else:
+        return jsonify(message="Invalid credentials, please try again."), 401
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
